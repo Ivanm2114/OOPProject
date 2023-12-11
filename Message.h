@@ -20,8 +20,8 @@ class BaseMessage {
 public:
     BaseMessage();
     BaseMessage(V data);
-    void setData(V data);
-    V getMessage() const;
+    virtual void setData(V data);
+    virtual V getMessage() const;
     virtual string getClass() const;
 protected:
     V data;
@@ -32,10 +32,9 @@ class EditRobotMessage: public BaseMessage<V> {
 public:
     EditRobotMessage();
     EditRobotMessage(K key, V data);
-    void setData(V data);
     void setKey(K key);
     string getClass() const override;
-    tuple<K,V> getMessage() const;
+    tuple<K,V> getMessage() const override;
 
 private:
     V data;
@@ -48,10 +47,11 @@ public:
     EditConnectionMessage();
     EditConnectionMessage(Robot<K,V>& first, Robot<K,V>& second, string mode);
     EditConnectionMessage(Robot<K,V>& first, Robot<K,V>& second, bool mode);
-    void setRobots(Robot<V,K>& first, Robot<V,K>& Second);
+    void setRobots(Robot<K,V>& first, Robot<K,V>& second);
     void setMode(string mode);
     void setMode(bool mode);
     string getClass() const override;
+    tuple<Robot<K,V>&, Robot<K,V>&, bool> getMessage() const override;
 private:
     Robot<K,V>& first,second;
     bool mode;
@@ -73,7 +73,12 @@ V BaseMessage<V>::getMessage() const {
 
 template<class V>
 void BaseMessage<V>::setData(V data) {
-
+    if(bool(data)){
+        this->data=data;
+    }
+    else{
+        cout << "This data can`t be set";
+    }
 }
 
 template<class V>
@@ -92,15 +97,6 @@ EditRobotMessage<K,V>::EditRobotMessage(K key,V data) {
 };
 
 
-template<class K,class V>
-void EditRobotMessage<K,V>::setData(V data){
-    if(bool(data)){
-        this->data=data;
-    }
-    else{
-        cout << "This data can`t be set";
-    }
-};
 
 template<class K,class V>
 void EditRobotMessage<K,V>::setKey(K key){
@@ -119,4 +115,54 @@ string EditRobotMessage<K,V>::getClass() const{
 }
 
 template<class K,class V>
-tuple<K,V> EditRobotMessage<K,V>::getMessage() const{}
+tuple<K,V> EditRobotMessage<K,V>::getMessage() const{
+    return tuple<K,V>(key,data);
+}
+
+template<class K, class V>
+EditConnectionMessage<K,V>::EditConnectionMessage(){};
+
+template<class K, class V>
+void EditConnectionMessage<K, V>::setRobots(Robot <K, V> &first, Robot <K, V> &second) {
+    this->first=first;
+    this->second=second;
+}
+
+template<class K,class V>
+void EditConnectionMessage<K,V>::setMode(bool mode) {
+    this->mode = mode;
+};
+
+template<class K, class V>
+void EditConnectionMessage<K,V>::setMode(std::string mode) {
+    if(mode=="connect"){
+        setMode(true);
+    }
+    if(mode=="disconnect"){
+        setMode(false);
+    }
+};
+
+template<class K,class V>
+string EditConnectionMessage<K,V>::getClass() const {
+    return "EditConnectionMessage";
+};
+
+
+template<class K,class V>
+tuple<Robot<K,V>&, Robot<K,V>&, bool> EditConnectionMessage<K,V>::getMessage() const {
+    return tuple<Robot<K,V>&, Robot<K,V>&, bool>(first,second,mode);
+};
+
+template<class K,class V>
+EditConnectionMessage<K,V>::EditConnectionMessage(Robot <K, V> &first, Robot <K, V> &second, bool mode) {
+    setRobots(first,second);
+    setMode(mode);
+}
+
+template<class K,class V>
+EditConnectionMessage<K,V>::EditConnectionMessage(Robot <K, V> &first, Robot <K, V> &second, std::string mode) {
+    setRobots(first,second);
+    setMode(mode);
+}
+
