@@ -10,6 +10,7 @@
 
 
 
+
 class EditConnectionMessage{
 public:
     EditConnectionMessage();

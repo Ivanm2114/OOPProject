@@ -1,7 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
-#include "Robot.h"
+#include "EditConnectionMessage.h"
 
 using namespace std;
 
@@ -14,10 +14,19 @@ int main() {
     a.insert({"lol1",1});
     a.insert({"lol2",3});
     a.insert({"lol3",3});
-    cout << a.at("lol2");
-    auto robo = Robot("Borya"s);
+    cout << a.at("lol2")<<endl;
+    auto robo = Robot("Borya");
+    auto ribi = Robot("Biba");
+    auto robba = Robot("Boba");
     robo.setParameter(c, 2);
-    cout << robo.getName();
+    cout << robo.getName()<<endl;
+    auto connectMsg = EditConnectionMessage(&robo,&ribi,true);
+    auto connectMsg2 = EditConnectionMessage(&robba,&ribi,true);
+    connectMsg.apply();
+    connectMsg2.apply();
+    robo.printTotalStructure();
+    auto params = robo.getParameters();
+    cout<< params;
 
 
 

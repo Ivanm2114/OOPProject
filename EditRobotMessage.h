@@ -6,9 +6,9 @@
 #define OOPPROJECT_EDITROBOTMESSAGE_H
 
 #endif //OOPPROJECT_EDITROBOTMESSAGE_H
-#include "BaseMessage.h"
-#include <unordered_map>
 
+#include <unordered_map>
+#include "BaseMessage.h"
 
 class EditRobotMessage : private BaseMessage {
 public:

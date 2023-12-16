@@ -20,9 +20,9 @@ public:
 
     BaseMessage(BaseMessage& initialMessage);
 
-    BaseMessage(const string &string_value);
+    explicit BaseMessage(const string &string_value);
 
-    BaseMessage(int digit_value);
+    explicit BaseMessage(int digit_value);
 
     BaseMessage(const string &string_value, int digit_value);
 
@@ -63,8 +63,8 @@ BaseMessage::BaseMessage(int value) {
 
 
 BaseMessage::BaseMessage(const string &string_value, int digit_value){
-    setValue(digit_value);
-    setValue(string_value);
+    this->digit_value=digit_value;
+    this->text_value = string_value;
 }
 
 string BaseMessage::getMessage() const {
@@ -102,3 +102,4 @@ int BaseMessage::getInt() const {
 string BaseMessage::getText() const {
     return text_value;
 }
+
