@@ -16,10 +16,10 @@
 #include <sstream>
 #include "EditRobotMessage.h"
 
-string star="*";
-string space=" ";
+string star = "*";
+string space = " ";
 
-string operator*(const string& s, unsigned int n) {
+string operator*(const string &s, unsigned int n) {
     stringstream out;
     while (n--)
         out << s;
@@ -48,7 +48,9 @@ public:
 
     void editConnectionWith(Robot *second, bool mode);
 
-    void sendMessage(Robot *target, BaseMessage &message, bool massMessage = false);
+    void sendMessage(Robot *target, BaseMessage &message);
+
+    void sendMassMessage(BaseMessage &message);
 
     void applyChanges(EditRobotMessage &message);
 
@@ -62,7 +64,15 @@ public:
 
     bool isConnected(Robot *robot) const;
 
-    bool isConnected(string& robotsName) const;
+    bool isConnected(string &robotsName) const;
+
+    int operator[](const string &key) const;
+
+    void operator+(Robot &second);
+
+    void operator-(Robot &second);
+
+    vector<const Robot *> getConnectedRobots() const;
 
 private:
     string name;
@@ -80,7 +90,7 @@ private:
 
     void copy_to(vector<Robot *> &origin, vector<Robot *> &destination);
 
-    void addConnections(vector<string> *robotsNames, unordered_map<string, vector<string>> *structure, int n=0) const;
+    void addConnections(vector<string> *robotsNames, unordered_map<string, vector<string>> *structure, int n = 0) const;
 
 };
 
@@ -165,53 +175,55 @@ void Robot::editConnectionWith(Robot *second, bool mode) {
     else if (t >= 0 and !mode) {
         connectedRobots.erase(connectedRobots.begin() + t);
     } else {
-        cout << "Action is impossible. Robots are already connected or disconnected";
+        cout << "Action is impossible. Robots are already connected or disconnected\n";
     }
 }
 
 bool Robot::transferMessage(Robot *origin, Robot *transmitter, Robot *target,
                             BaseMessage &message, vector<Robot *> route, bool massMessage) {
+    bool flag = false;
     if (this != target) {
         auto t = isInVector(target, connectedRobots);
         if (t >= 0 and connectedRobots[t]->getLastMessage() != &message) {
             route.push_back(this);
-            connectedRobots[t]->transferMessage(origin, this, target, message, route, massMessage);
+            flag = connectedRobots[t]->transferMessage(origin, this, target, message, route, massMessage);
         } else {
             int i = 0;
             bool flag = false;
             do {
                 if (connectedRobots[i] != origin and connectedRobots[i] != transmitter and
-                    !isInVector(connectedRobots[i], route)) {
+                    isInVector(connectedRobots[i], route) == -1) {
                     route.push_back(this);
                     flag = connectedRobots[i]->transferMessage(origin, this, target, message,
                                                                route, massMessage);
                 }
                 i++;
             } while (i < connectedRobots.size() and !flag);
+            return flag;
         }
     } else {
-        cout << "Robot " + this->name + "recieved message from robot" + origin->name +
-                ". The message: " + message.getMessage();
+        cout << "Robot " + this->name + " recieved message from robot " + origin->name +
+                ". The message: " + message.getMessage() + "\n";
         lastReceivedMessage = &message;
         return true;
     }
-    return false;
+    return flag;
 }
 
 const BaseMessage *Robot::getLastMessage() const {
     return lastReceivedMessage;
 }
 
-void Robot::sendMessage(Robot *target, BaseMessage &message, bool massMessage) {
+void Robot::sendMessage(Robot *target, BaseMessage &message) {
     vector<Robot *> route;
     bool flag = false;
     if (target != this) {
-        flag = transferMessage(this, this, target, message, route, massMessage);
+        flag = transferMessage(this, this, target, message, route, false);
     } else {
-        cout << "You don`t need to send message its the same robot";
+        cout << "You don`t need to send message its the same robot\n";
     }
     if (!flag) {
-        cout << "Couldn`t send the message";
+        cout << "Couldn`t send the message\n";
     }
 
 }
@@ -229,12 +241,12 @@ void Robot::applyChanges(EditRobotMessage &message) {
 }
 
 bool Robot::isConnected(Robot *robot) const {
-    isInVector(robot,connectedRobots);
+    isInVector(robot, connectedRobots);
 }
 
-bool Robot::isConnected(std::string& robotsName) const {
-    for(int i=0;i<connectedRobots.size();i++){
-        if(connectedRobots[i]->getName()==robotsName) return true;
+bool Robot::isConnected(std::string &robotsName) const {
+    for (int i = 0; i < connectedRobots.size(); i++) {
+        if (connectedRobots[i]->getName() == robotsName) return true;
     }
     return false;
 }
@@ -244,27 +256,26 @@ void Robot::addConnections(vector<std::string> *robotsNames, unordered_map<std::
     vector<string> connections;
     string spaces;
     for (int i = 0; i < robotsNames->size(); i++) {
-        if(isConnected((*robotsNames)[i])){
-            spaces = space*((int)(*robotsNames)[i].length()-1);
-            connections.push_back(star+spaces);
-            spaces = space*((int)name.length()-1);
-            structure->at((*robotsNames)[i]).push_back(star+spaces);
-        }
-        else{
-            spaces = space*((int)(*robotsNames)[i].length());
+        if (isConnected((*robotsNames)[i])) {
+            spaces = space * ((int) (*robotsNames)[i].length() - 1);
+            connections.push_back(star + spaces);
+            spaces = space * ((int) name.length() - 1);
+            structure->at((*robotsNames)[i]).push_back(star + spaces);
+        } else {
+            spaces = space * ((int) (*robotsNames)[i].length());
             connections.push_back(spaces);
-            spaces = space*((int)name.length());
+            spaces = space * ((int) name.length());
             structure->at((*robotsNames)[i]).push_back(spaces);
         }
     }
-    spaces = space*(int)(name.length()-1);
-    connections.push_back(star+spaces);
-    structure->insert({name,connections});
+    spaces = space * (int) (name.length() - 1);
+    connections.push_back(star + spaces);
+    structure->insert({name, connections});
     robotsNames->push_back(name);
     ++n;
-    for(int i=0;i<connectedRobots.size();i++){
-        if(structure->find(connectedRobots[i]->getName())==structure->end()){
-            connectedRobots[i]->addConnections(robotsNames,structure,n);
+    for (int i = 0; i < connectedRobots.size(); i++) {
+        if (structure->find(connectedRobots[i]->getName()) == structure->end()) {
+            connectedRobots[i]->addConnections(robotsNames, structure, n);
         }
     }
 
@@ -274,24 +285,52 @@ void Robot::addConnections(vector<std::string> *robotsNames, unordered_map<std::
 void Robot::printTotalStructure() const {
     unordered_map<string, vector<string>> structure;
     vector<std::string> robotsOrder;
-    int maxLen=-1;
-    addConnections(&robotsOrder,&structure);
-    for(int i=0;i<robotsOrder.size();i++){
-        int curLen = (int)robotsOrder[i].length();
-        if(curLen>maxLen) maxLen=curLen;
+    int maxLen = -1;
+    addConnections(&robotsOrder, &structure);
+    for (int i = 0; i < robotsOrder.size(); i++) {
+        int curLen = (int) robotsOrder[i].length();
+        if (curLen > maxLen) maxLen = curLen;
     }
-    cout<<space*maxLen<<"|";
-    for(int i=0;i<robotsOrder.size();i++){
-        cout<<robotsOrder[i] << '|';
+    cout << space * maxLen << "|";
+    for (int i = 0; i < robotsOrder.size(); i++) {
+        cout << robotsOrder[i] << '|';
     }
     cout << endl;
-    for(int i=0;i<robotsOrder.size();i++){
-        cout<<space*(maxLen-robotsOrder[i].length()) <<robotsOrder[i] <<"|";
+    for (int i = 0; i < robotsOrder.size(); i++) {
+        cout << space * (maxLen - robotsOrder[i].length()) << robotsOrder[i] << "|";
         auto line = structure.at(robotsOrder[i]);
-        for(int j=0;j<line.size();j++){
-            cout << line[j] <<"|";
+        for (int j = 0; j < line.size(); j++) {
+            cout << line[j] << "|";
         }
-        cout<<endl;
+        cout << endl;
     }
+
+}
+
+int Robot::operator[](const string &key) const {
+    if (parameters.find(key) != parameters.end())
+        return parameters.at(key);
+    return 0;
+}
+
+void Robot::operator+(Robot &second) {
+    editConnectionWith(&second, true);
+    second.editConnectionWith(this, true);
+}
+
+void Robot::operator-(Robot &second) {
+    editConnectionWith(&second, false);
+    second.editConnectionWith(this, false);
+}
+
+vector<const Robot *> Robot::getConnectedRobots() const {
+    vector<const Robot *> t;
+    for (int i = 0; i < connectedRobots.size(); i++) {
+        t.push_back(connectedRobots[i]);
+    }
+    return t;
+}
+
+void Robot::sendMassMessage(BaseMessage &message) {
 
 }

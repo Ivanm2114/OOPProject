@@ -14,9 +14,9 @@ class EditRobotMessage : private BaseMessage {
 public:
     EditRobotMessage();
 
-    EditRobotMessage(EditRobotMessage& initialMessage);
+    EditRobotMessage(EditRobotMessage &initialMessage);
 
-    EditRobotMessage(string &key, int &value);
+    EditRobotMessage(const string &key, int value);
 
     void setKey(string key);
 
@@ -33,18 +33,15 @@ public:
 };
 
 
-
-
-
 EditRobotMessage::EditRobotMessage() = default;
 
 
-EditRobotMessage::EditRobotMessage(string &key, int &value) {
+EditRobotMessage::EditRobotMessage(const string &key, int value) {
     BaseMessage::setValue(key, value);
 };
 
-EditRobotMessage::EditRobotMessage(EditRobotMessage& initialMessage){
-    BaseMessage::setValue(initialMessage.text_value,initialMessage.digit_value);
+EditRobotMessage::EditRobotMessage(EditRobotMessage &initialMessage) {
+    BaseMessage::setValue(initialMessage.text_value, initialMessage.digit_value);
 }
 
 string EditRobotMessage::getClass() const {

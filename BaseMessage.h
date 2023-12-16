@@ -18,7 +18,7 @@ class BaseMessage {
 public:
     BaseMessage();
 
-    BaseMessage(BaseMessage& initialMessage);
+    BaseMessage(BaseMessage &initialMessage);
 
     explicit BaseMessage(const string &string_value);
 
@@ -28,9 +28,9 @@ public:
 
     virtual void setValue(int value);
 
-    void setValue(const string& value);
+    void setValue(const string &value);
 
-    void setValue( string& string_value,int int_value);
+    void setValue(const string &string_value, int int_value);
 
     virtual string getMessage() const;
 
@@ -42,7 +42,7 @@ public:
 
 protected:
     string text_value;
-    int digit_value=0;
+    int digit_value = 0;
 };
 
 
@@ -62,13 +62,13 @@ BaseMessage::BaseMessage(int value) {
 };
 
 
-BaseMessage::BaseMessage(const string &string_value, int digit_value){
-    this->digit_value=digit_value;
+BaseMessage::BaseMessage(const string &string_value, int digit_value) {
+    this->digit_value = digit_value;
     this->text_value = string_value;
 }
 
 string BaseMessage::getMessage() const {
-    return text_value + std::to_string(digit_value);
+    return text_value + " " + std::to_string(digit_value);
 };
 
 
@@ -76,7 +76,7 @@ void BaseMessage::setValue(int value) {
     digit_value = value;
 }
 
-void BaseMessage::setValue(const std::string& value) {
+void BaseMessage::setValue(const std::string &value) {
     if (!value.empty()) {
         text_value = value;
     } else {
@@ -84,7 +84,7 @@ void BaseMessage::setValue(const std::string& value) {
     }
 }
 
-void BaseMessage::setValue(std::string &string_value, int int_value) {
+void BaseMessage::setValue(const std::string &string_value, int int_value) {
     setValue(int_value);
     setValue(string_value);
 }

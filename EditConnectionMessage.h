@@ -6,12 +6,11 @@
 #define EDITCONNECTIONMESSAGE_H
 
 #endif //EDITCONNECTIONMESSAGE_H
+
 #include "Robot.h"
 
 
-
-
-class EditConnectionMessage{
+class EditConnectionMessage {
 public:
     EditConnectionMessage();
 
@@ -25,7 +24,7 @@ public:
 
     void setValue(bool mode);
 
-    string getClass() const ;
+    string getClass() const;
 
     Robot *getFirst() const;
 
@@ -38,21 +37,21 @@ public:
     string getMessage() const;
 
 private:
-    Robot *second= nullptr;
+    Robot *second = nullptr;
     Robot *first = nullptr;
-    bool mode=false;
+    bool mode = true;
 };
 
 EditConnectionMessage::EditConnectionMessage() = default;
 
-EditConnectionMessage::EditConnectionMessage(Robot *first, Robot *second, bool mode=true) {
+EditConnectionMessage::EditConnectionMessage(Robot *first, Robot *second, bool mode = true) {
     this->first = first;
     this->second = second;
     setValue(mode);
 }
 
 
-EditConnectionMessage::EditConnectionMessage(Robot *first, Robot *second, const string &mode="connected") {
+EditConnectionMessage::EditConnectionMessage(Robot *first, Robot *second, const string &mode = "connected") {
     this->first = first;
     this->second = second;
     setValue(mode);
@@ -113,9 +112,9 @@ string EditConnectionMessage::getMessage() const {
 };
 
 void EditConnectionMessage::apply() {
-    if(first!= nullptr and second!= nullptr and mode){
+    if (first != nullptr and second != nullptr) {
         first->editConnectionWith(second, mode);
-        second->editConnectionWith(first,mode);
-
+        second->editConnectionWith(first, mode);
     }
+
 }
