@@ -48,6 +48,8 @@ public:
 
     void setParameter(string key, int value);
 
+    void deleteParameter(string key);
+
     void editConnectionWith(Robot *second, bool mode);
 
     void sendMessage(Robot *target, BaseMessage &message, Robot *origin);
@@ -189,9 +191,8 @@ bool Robot::transferMessage(Robot *origin, Robot *transmitter, Robot *target,
             flag = connectedRobots[t]->transferMessage(origin, this, target, message, route);
         } else {
             int i = 0;
-            bool flag = false;
             do {
-                if (connectedRobots[i] != origin and connectedRobots[i] != transmitter and
+                if (!connectedRobots.empty() and connectedRobots[i] != origin and connectedRobots[i] != transmitter and
                     isInVector(connectedRobots[i], route) == -1) {
                     route.push_back(this);
                     flag = connectedRobots[i]->transferMessage(origin, this, target, message,
@@ -351,15 +352,15 @@ void Robot::innerSendMassMessage(BaseMessage &message, Robot *origin, vector<Rob
 
 void Robot::deleteFromNet() {
     for(int i=0;i<connectedRobots.size();i++){
-        for(int j=i;j<connectedRobots.size();j++){
+        for(int j=i+1;j<connectedRobots.size();j++){
             if(i!=j and !connectedRobots[i]->isConnected(connectedRobots[j])){
                 *connectedRobots[i]+*connectedRobots[j];
             }
         }
     }
-
-    for(int i=0;i<connectedRobots.size();i++){
-        *this-*connectedRobots[i];
+    auto initialSize = connectedRobots.size();
+    for(int i=0;i<initialSize;i++){
+        *this-*connectedRobots[0];
     }
 }
 
@@ -369,4 +370,11 @@ Robot::~Robot() {
 
 string Robot::getClass() const {
     return "Robot";
+}
+
+void Robot::deleteParameter(string key) {
+    if(parameters.find(key)!=parameters.end()){
+        parameters.erase(key);
+    }
+
 }
