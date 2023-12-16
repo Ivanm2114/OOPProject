@@ -40,6 +40,8 @@ public:
 
     Robot(const string &name, const unordered_map<string, int> &parameters);
 
+    ~Robot();
+
     void setName(const string &new_name);
 
     void setParameters(unordered_map<string, int> &new_parameters);
@@ -48,7 +50,7 @@ public:
 
     void editConnectionWith(Robot *second, bool mode);
 
-    void sendMessage(Robot *target, BaseMessage &message);
+    void sendMessage(Robot *target, BaseMessage &message, Robot *origin);
 
     void sendMassMessage(BaseMessage &message);
 
@@ -74,23 +76,29 @@ public:
 
     vector<const Robot *> getConnectedRobots() const;
 
+    string getClass() const;
+
+    void deleteFromNet();
+
 private:
     string name;
     unordered_map<string, int> parameters;
     vector<Robot *> connectedRobots;
 
-    BaseMessage *lastReceivedMessage;
+    BaseMessage *lastReceivedMessage= nullptr;
 
     int isInVector(Robot *robot, vector<Robot *> robotList) const;
 
     void copy_to(unordered_map<string, int> &origin, unordered_map<string, int> &destination);
 
     bool transferMessage(Robot *origin, Robot *transmitter, Robot *target,
-                         BaseMessage &message, vector<Robot *> route, bool massMessage);
+                         BaseMessage &message, vector<Robot *> route);
 
     void copy_to(vector<Robot *> &origin, vector<Robot *> &destination);
 
     void addConnections(vector<string> *robotsNames, unordered_map<string, vector<string>> *structure, int n = 0) const;
+
+    void innerSendMassMessage(BaseMessage &message, Robot *origin, vector<Robot *> *sentMessages);
 
 };
 
@@ -149,15 +157,7 @@ auto Robot::getName() const {
 
 
 auto Robot::getParameters() const {
-    string t = "Parameters of " + name + ":\n";
-
-    for (const auto &[key, value]: parameters) {
-        t += (string) key;
-        t += ": ";
-        t += std::to_string(value);
-        t += "\n";
-    }
-    return t;
+    return parameters;
 }
 
 int Robot::isInVector(Robot *robot, vector<Robot *> robotList) const {
@@ -180,13 +180,13 @@ void Robot::editConnectionWith(Robot *second, bool mode) {
 }
 
 bool Robot::transferMessage(Robot *origin, Robot *transmitter, Robot *target,
-                            BaseMessage &message, vector<Robot *> route, bool massMessage) {
+                            BaseMessage &message, vector<Robot *> route) {
     bool flag = false;
     if (this != target) {
         auto t = isInVector(target, connectedRobots);
         if (t >= 0 and connectedRobots[t]->getLastMessage() != &message) {
             route.push_back(this);
-            flag = connectedRobots[t]->transferMessage(origin, this, target, message, route, massMessage);
+            flag = connectedRobots[t]->transferMessage(origin, this, target, message, route);
         } else {
             int i = 0;
             bool flag = false;
@@ -195,7 +195,7 @@ bool Robot::transferMessage(Robot *origin, Robot *transmitter, Robot *target,
                     isInVector(connectedRobots[i], route) == -1) {
                     route.push_back(this);
                     flag = connectedRobots[i]->transferMessage(origin, this, target, message,
-                                                               route, massMessage);
+                                                               route);
                 }
                 i++;
             } while (i < connectedRobots.size() and !flag);
@@ -214,11 +214,12 @@ const BaseMessage *Robot::getLastMessage() const {
     return lastReceivedMessage;
 }
 
-void Robot::sendMessage(Robot *target, BaseMessage &message) {
+void Robot::sendMessage(Robot *target, BaseMessage &message, Robot *origin = nullptr) {
     vector<Robot *> route;
     bool flag = false;
+    if (origin == nullptr) origin = this;
     if (target != this) {
-        flag = transferMessage(this, this, target, message, route, false);
+        flag = transferMessage(origin, this, target, message, route);
     } else {
         cout << "You don`t need to send message its the same robot\n";
     }
@@ -241,7 +242,7 @@ void Robot::applyChanges(EditRobotMessage &message) {
 }
 
 bool Robot::isConnected(Robot *robot) const {
-    isInVector(robot, connectedRobots);
+    return isInVector(robot, connectedRobots) > -1;
 }
 
 bool Robot::isConnected(std::string &robotsName) const {
@@ -332,5 +333,40 @@ vector<const Robot *> Robot::getConnectedRobots() const {
 }
 
 void Robot::sendMassMessage(BaseMessage &message) {
+    vector<Robot *> sentMessages;
+    sentMessages.push_back(this);
+    innerSendMassMessage(message, this, &sentMessages);
+}
 
+void Robot::innerSendMassMessage(BaseMessage &message, Robot *origin, vector<Robot *> *sentMessages) {
+    for (int i = 0; i < connectedRobots.size(); ++i) {
+        if(isInVector(connectedRobots[i],*sentMessages)==-1){
+        sendMessage(connectedRobots[i], message, origin);
+        sentMessages->push_back(connectedRobots[i]);
+        connectedRobots[i]->innerSendMassMessage(message, origin,sentMessages);
+        }
+    }
+
+}
+
+void Robot::deleteFromNet() {
+    for(int i=0;i<connectedRobots.size();i++){
+        for(int j=i;j<connectedRobots.size();j++){
+            if(i!=j and !connectedRobots[i]->isConnected(connectedRobots[j])){
+                *connectedRobots[i]+*connectedRobots[j];
+            }
+        }
+    }
+
+    for(int i=0;i<connectedRobots.size();i++){
+        *this-*connectedRobots[i];
+    }
+}
+
+Robot::~Robot() {
+    deleteFromNet();
+}
+
+string Robot::getClass() const {
+    return "Robot";
 }

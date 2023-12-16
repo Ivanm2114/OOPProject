@@ -18,6 +18,8 @@ public:
 
     EditRobotMessage(const string &key, int value);
 
+    ~EditRobotMessage();
+
     void setKey(string key);
 
     void setValue(int value) override;
@@ -74,4 +76,6 @@ void EditRobotMessage::setValue(int value) {
 void EditRobotMessage::setKey(std::string key) {
     BaseMessage::setValue(key);
 }
+
+EditRobotMessage::~EditRobotMessage() = default;
 

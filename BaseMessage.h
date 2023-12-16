@@ -26,6 +26,8 @@ public:
 
     BaseMessage(const string &string_value, int digit_value);
 
+    ~BaseMessage();
+
     virtual void setValue(int value);
 
     void setValue(const string &value);
@@ -102,4 +104,6 @@ int BaseMessage::getInt() const {
 string BaseMessage::getText() const {
     return text_value;
 }
+
+BaseMessage::~BaseMessage() = default;
 

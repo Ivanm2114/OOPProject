@@ -18,6 +18,8 @@ public:
 
     EditConnectionMessage(Robot *first, Robot *second, bool mode);
 
+    ~EditConnectionMessage();
+
     void setValue(Robot *first, Robot *second);
 
     void setValue(const string &mode);
@@ -118,3 +120,5 @@ void EditConnectionMessage::apply() {
     }
 
 }
+
+EditConnectionMessage::~EditConnectionMessage() = default;
